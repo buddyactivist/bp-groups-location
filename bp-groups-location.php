@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: BP Groups Location
- * Description: Geolocation for Buddypress Groups.
+ * Description: Geolocation for Buddypress/Buddyboss Groups.
  * Version:     1.0.0
  * Author:      BuddyActivist
  * Text Domain: bp-groups-location
@@ -172,36 +172,55 @@ function bgl_group_map_screen() {
 }
 
 /**
- * Content of the "Map" tab: single group map shortcode.
+ * Content of the "Map" tab: uses the single group map shortcode with current group ID.
  */
 function bgl_group_map_screen_content() {
-    echo do_shortcode( '[group_location_map]' );
+    if ( function_exists( 'bp_get_group_id' ) ) {
+        $group_id = bp_get_group_id();
+        echo do_shortcode( '[group_location_map id="' . (int) $group_id . '"]' );
+    } else {
+        echo '<p>' . esc_html__( 'Group context not available.', 'bp-groups-location' ) . '</p>';
+    }
 }
 
 /* ----------------------------------------------------------
- * 4. SHORTCODE: SINGLE GROUP MAP
+ * 4. SHORTCODE: SINGLE GROUP MAP (REQUIRES ID)
  * ---------------------------------------------------------- */
 
 /**
- * Shortcode [group_location_map]
- * Shows an OSM map with a marker for the current group location.
+ * Shortcode [group_location_map id="123"]
+ * Shows an OSM map for a specific group ID.
  *
+ * @param array $atts Shortcode attributes.
  * @return string HTML output.
  */
-function bgl_group_location_map_shortcode() {
+function bgl_group_location_map_shortcode( $atts = array() ) {
 
-    if ( ! function_exists( 'bp_is_group' ) || ! bp_is_group() ) {
-        return '<p>' . esc_html__( 'The group map is only available on group pages.', 'bp-groups-location' ) . '</p>';
+    $atts = shortcode_atts(
+        array(
+            'id' => 0, // group ID
+        ),
+        $atts,
+        'group_location_map'
+    );
+
+    $group_id = (int) $atts['id'];
+
+    if ( $group_id <= 0 ) {
+        return '<p>' . esc_html__( 'Error: you must provide a valid group ID.', 'bp-groups-location' ) . '</p>';
     }
 
-    $group_id = bp_get_group_id();
+    $group = groups_get_group( array( 'group_id' => $group_id ) );
+    if ( empty( $group ) || empty( $group->id ) ) {
+        return '<p>' . esc_html__( 'Error: the specified group does not exist.', 'bp-groups-location' ) . '</p>';
+    }
+
     $location = groups_get_groupmeta( $group_id, 'group-location', true );
-
     if ( empty( $location ) ) {
-        return '<p>' . esc_html__( 'No location has been set for this group.', 'bp-groups-location' ) . '</p>';
+        return '<p>' . esc_html__( 'This group has no location set.', 'bp-groups-location' ) . '</p>';
     }
 
-    $map_id = 'bgl-group-map-' . (int) $group_id;
+    $map_id = 'bgl-group-map-' . $group_id;
 
     ob_start();
     ?>
