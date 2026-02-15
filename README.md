@@ -70,8 +70,6 @@ Groups → Manage → Details
 You will find a field:
 
 
-You will find a field:
-
 **Geolocated address**
 
 Enter any address, city, or place name.
