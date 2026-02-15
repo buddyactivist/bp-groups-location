@@ -20,13 +20,20 @@ This plugin is lightweight, dependency-free, and fully compatible with WordPress
 - Displays a Leaflet map with a marker for the group’s location.
 
 ### 🔌 Shortcodes
-#### **1. Single Group Map**
-Displays the map of the current group.
-[group_location_map]
+#### **1. Single Group Map (requires group ID)**  
+Displays the map of a specific group.
+[group_location_map id="123"]
 
-#### **2. All Groups Map (with clustering)**
+- `id` (required): the numeric ID of the group  
+- If the ID is missing or invalid, the shortcode returns an error message.
+
+#### **2. All Groups Map (with clustering)**  
 Displays a map of all groups that have a location set, using marker clustering.
 [all_groups_map]
+
+Optional attributes:
+[all_groups_map per_page="500"]
+
 
 ### 🧭 Mapping Technology
 - Leaflet.js for map rendering
