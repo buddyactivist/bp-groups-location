@@ -1,2 +1,2 @@
-# bpgroupslocation
-BP Groups Location
+# BP Groups Location
+Geolocation for Buddypress Groups
