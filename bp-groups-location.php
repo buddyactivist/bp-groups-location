@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: BP Groups Location
- * Description: Geolocation for Buddypress/Buddyboss Groups.
- * Version:     1.0.0
+ * Description: Geolocation for BuddyPress/BuddyBoss Groups.
+ * Version:     1.2.0
  * Author:      BuddyActivist
  * Text Domain: bp-groups-location
  * Domain Path: /languages
@@ -77,23 +77,31 @@ function bgl_enqueue_leaflet_assets() {
 add_action( 'wp_enqueue_scripts', 'bgl_enqueue_leaflet_assets' );
 
 /* ----------------------------------------------------------
- * 2. GROUP ADMIN FIELD: GEOLOCATED ADDRESS
+ * 2. GROUP ADMIN FIELD: GEOLOCATED ADDRESS + VERIFY MAP
  * ---------------------------------------------------------- */
 
 /**
- * Output the "Geolocated address" field in group admin (create/edit).
+ * Group admin field with:
+ * - address input
+ * - "Verify location" button (live preview)
+ * - map preview
+ * - "Save location" button (normal form submit)
  */
 function bgl_group_location_field_markup() {
     if ( ! function_exists( 'bp_get_group_id' ) ) {
         return;
     }
 
-    $location = groups_get_groupmeta( bp_get_group_id(), 'group-location', true );
+    $group_id = bp_get_group_id();
+    $location = groups_get_groupmeta( $group_id, 'group-location', true );
+    $map_id   = 'bgl-verify-map-' . $group_id;
     ?>
     <div class="bgl-group-location-field">
+
         <label for="group-location">
             <strong><?php esc_html_e( 'Geolocated address', 'bp-groups-location' ); ?></strong>
         </label>
+
         <input
             type="text"
             id="group-location"
@@ -101,10 +109,72 @@ function bgl_group_location_field_markup() {
             value="<?php echo esc_attr( $location ); ?>"
             style="width:100%; max-width:400px;"
         >
+
         <p class="description">
             <?php esc_html_e( 'Enter an address, city, or place name.', 'bp-groups-location' ); ?>
         </p>
+
+        <button type="button" class="button" id="bgl-verify-btn">
+            <?php esc_html_e( 'Verify location', 'bp-groups-location' ); ?>
+        </button>
+
+        <button type="submit" class="button button-primary" id="bgl-save-btn">
+            <?php esc_html_e( 'Save location', 'bp-groups-location' ); ?>
+        </button>
+
+        <div id="<?php echo esc_attr( $map_id ); ?>"
+             style="width:100%; height:300px; margin-top:15px; display:none;"></div>
     </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const verifyBtn = document.getElementById("bgl-verify-btn");
+        const mapDiv    = document.getElementById("<?php echo esc_js( $map_id ); ?>");
+        const input     = document.getElementById("group-location");
+
+        verifyBtn.addEventListener("click", function() {
+
+            const address = input.value.trim();
+            if (!address) {
+                alert("<?php echo esc_js( __( 'Please enter an address first.', 'bp-groups-location' ) ); ?>");
+                return;
+            }
+
+            mapDiv.style.display = "block";
+            mapDiv.innerHTML = "<?php echo esc_js( __( 'Loading map…', 'bp-groups-location' ) ); ?>";
+
+            fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(address))
+                .then(r => r.json())
+                .then(data => {
+
+                    if (!data || !data.length) {
+                        mapDiv.innerHTML = "<?php echo esc_js( __( 'Unable to find this location.', 'bp-groups-location' ) ); ?>";
+                        return;
+                    }
+
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+
+                    mapDiv.innerHTML = "";
+
+                    const map = L.map("<?php echo esc_js( $map_id ); ?>").setView([lat, lon], 14);
+
+                    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                        maxZoom: 19,
+                        attribution: "© OpenStreetMap contributors"
+                    }).addTo(map);
+
+                    L.marker([lat, lon]).addTo(map)
+                        .bindPopup(address)
+                        .openPopup();
+                })
+                .catch(() => {
+                    mapDiv.innerHTML = "<?php echo esc_js( __( 'Error loading map.', 'bp-groups-location' ) ); ?>";
+                });
+        });
+    });
+    </script>
     <?php
 }
 add_action( 'groups_custom_group_fields_editable', 'bgl_group_location_field_markup' );
