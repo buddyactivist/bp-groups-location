@@ -22,6 +22,7 @@ This plugin is lightweight, dependency-free, and fully compatible with WordPress
 ### 🔌 Shortcodes
 #### **1. Single Group Map (requires group ID)**  
 Displays the map of a specific group.
+
 [group_location_map id="123"]
 
 - `id` (required): the numeric ID of the group  
@@ -29,9 +30,11 @@ Displays the map of a specific group.
 
 #### **2. All Groups Map (with clustering)**  
 Displays a map of all groups that have a location set, using marker clustering.
+
 [all_groups_map]
 
 Optional attributes:
+
 [all_groups_map per_page="500"]
 
 
@@ -49,10 +52,12 @@ Optional attributes:
 2. Ensure the folder is named:
 bp-groups-location
 3. Upload it to:
+   
 /wp-content/plugins/
+
 or install via the WordPress plugin uploader.
 
-4. Activate the plugin from **Plugins → Installed Plugins**.
+6. Activate the plugin from **Plugins → Installed Plugins**.
 
 ---
 
@@ -64,12 +69,22 @@ Groups → Manage → Details
 
 You will find a field:
 
+
+You will find a field:
+
 **Geolocated address**
 
 Enter any address, city, or place name.
 
+You can:
+
+- Click **Verify location** to preview the map  
+- Click **Save location** to store the address
+
 ### 2. View the group map
 A new tab appears inside the group:
+
+Map
 
 It displays the group’s location on an OSM map.
 
